@@ -10,20 +10,20 @@ error FundMe__NotOwner();
 contract FundMe {
     using PriceConverter for uint256;
 
-    uint256 public constant MIN_USD = 5e18;
-
-    address[] public funders;
-
     mapping (address funder => uint256 amountFunded) public addressToAmountFunded;
     
     address public immutable i_owner;
+    uint256 public constant MIN_USD = 5e18;
+    address[] public funders;
+    AggregatorV3Interface private s_priceFeed;
 
-    constructor() {
+    constructor(address priceFeed) {
         i_owner = msg.sender;
+        s_priceFeed = AggregatorV3Interface(priceFeed);
     }
 
     function fund() public payable {
-        require(msg.value.getConversionRate() > MIN_USD, "Didn't sent enough ETH");
+        require(msg.value.getConversionRate(s_priceFeed) > MIN_USD, "Didn't sent enough ETH");
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] += msg.value;
     }
@@ -40,8 +40,7 @@ contract FundMe {
     }
 
     function getVersion() public view returns (uint256) {
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
-        return priceFeed.version();
+        return s_priceFeed.version();
     }
 
     modifier onlyOwner() {
