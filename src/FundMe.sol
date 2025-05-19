@@ -33,10 +33,24 @@ contract FundMe {
             address funder = s_funders[i];
             s_addressToAmountFunded[funder] = 0;
         }
+        // reset the array
         s_funders = new address[](0);
         (bool callSuccess, ) = payable (msg.sender).call{value: address(this).balance}("");
         require(callSuccess, "Send Failed!");
     }
+
+    function gasOptimizedWithdraw() public onlyOwner {
+        uint256 fundersLength = s_funders.length;
+         for (uint256 i = 0; i < fundersLength; i++) {
+            address funder = s_funders[i];
+            s_addressToAmountFunded[funder] = 0;
+        }
+        // reset the array
+        s_funders = new address[](0);
+        (bool callSuccess, ) = payable (msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Send Failed!");
+    }
+
 
     modifier onlyOwner() {
         if (msg.sender != i_owner) { revert FundMe__NotOwner(); }
