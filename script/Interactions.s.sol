@@ -2,35 +2,47 @@
 
 pragma solidity ^0.8.20;
 
-import {Script , console} from "forge-std/Script.sol";
+import {Script, console} from "forge-std/Script.sol";
+import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 import {FundMe} from "../src/FundMe.sol";
 
-contract FundFundMe is Script {
-    uint256 SEND_VALUE = 0.1 ether;
+contract DepositFundMe is Script {
+    uint256 constant SEND_VALUE = 0.1 ether;
 
-    function fundFundMe(address mostRecentlyDeployed) public {
+    function fund(address contractAddress) public {
         vm.startBroadcast();
-        FundMe(payable(mostRecentlyDeployed)).fund{value: SEND_VALUE}();
+        FundMe(payable(contractAddress)).fund{value: SEND_VALUE}();
+        console.log("Funded fundMe with %s", SEND_VALUE);
         vm.stopBroadcast();
-        console.log("Funded FundMe with %s", SEND_VALUE);
     }
 
     function run() external {
-        address mostRecentlyDeployed = "";
-        fundFundMe(mostRecentlyDeployed);
+        address mostRecentAddress = DevOpsTools.get_most_recent_deployment(
+            "FundMe",
+            block.chainid
+        );
+
+        // vm.startBroadcast();
+        fund(mostRecentAddress);
+        // vm.stopBroadcast();
     }
 }
 
 contract WithdrawFundMe is Script {
-    function withdrawFundMe(address mostRecentlyDeployed) public {
+    function withdraw(address contractAddress) public {
         vm.startBroadcast();
-        FundMe(payable(mostRecentlyDeployed)).withdraw();
+        FundMe(payable(contractAddress)).withdraw();
         vm.stopBroadcast();
-        console.log("Withdraw FundMe balance!");
     }
 
     function run() external {
-        address mostRecentlyDeployed = "";
-        withdrawFundMe(mostRecentlyDeployed);
+        address mostRecentAddress = DevOpsTools.get_most_recent_deployment(
+            "FundMe",
+            block.chainid
+        );
+
+        vm.startBroadcast();
+        withdraw(mostRecentAddress);
+        vm.stopBroadcast();
     }
 }
